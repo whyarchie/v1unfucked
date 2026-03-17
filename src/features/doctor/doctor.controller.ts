@@ -1,0 +1,64 @@
+import express from "express";
+import { AuthUser } from "../../middleware/Auth";
+import { AppError } from "../../utils/AppError";
+import { COMMON_ERROR } from "../../constants/messages";
+import { DoctorSchema } from "./doctor.schema";
+import { CreateDoctor } from "./doctor.service";
+
+const doctorRouter = express.Router();
+
+/**
+ * @swagger
+ * tags:
+ *   name: Doctors
+ *   description: API to manage doctors
+ */
+
+/**
+ * @swagger
+ * /api/v1/doctor/create:
+ *   post:
+ *     summary: Create a new doctor (Hospital Only)
+ *     tags: [Doctors]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               username:
+ *                 type: string
+ *             example:
+ *               name: "Dr. Gregory House"
+ *               username: "drhouse_01"
+ *     responses:
+ *       201:
+ *         description: Doctor created successfully
+ *       404:
+ *         description: Invalid hospital
+ */
+doctorRouter.post("/create", AuthUser, async (req, res, next) => {
+  try {
+    const user = req.user;
+    if (user?.role != "Hospital") {
+      throw new AppError(COMMON_ERROR.INVALID_HOSPITAL, 404);
+    }
+    const data = req.body;
+
+    const safeData = DoctorSchema.parse({ hospitalId: user.id, ...data })
+    const result = await CreateDoctor(safeData)
+    res.status(201).json({
+      success: true,
+      data: result
+    })
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default doctorRouter;
