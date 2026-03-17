@@ -2,10 +2,16 @@ import express from "express"
 import mainRouter from "./mainRouter"
 import cookieParser from "cookie-parser";
 import { globalErrorHandler } from "./middleware/globalErrorHandler"
+import { setupSwagger } from "./swagger";
+
 const app = express()
 const PORT = Number(process.env.PORT) || 3000
 app.use(express.json())
 app.use(cookieParser())
+
+// Setup Swagger UI
+setupSwagger(app);
+
 app.use('/api/v1/', mainRouter)
 app.get('/health', (req, res) => {
     res.status(200).json({
@@ -14,7 +20,18 @@ app.get('/health', (req, res) => {
 })
 app.use(globalErrorHandler)
 
-app.listen(PORT, () => console.log(`[ READY ] Server is running at http://localhost:${PORT}`))
+const server = app.listen(PORT, () => {
+    console.log(`[ READY ] Server is running at http://localhost:${PORT}`);
+});
+
+server.on('error', (error: any) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use. Please kill existing processes running on this port.`);
+        process.exit(1);
+    } else {
+        console.error('Server error:', error);
+    }
+});
 
 process.on('exit', (code) => console.log('Exited with code', code));
 process.on('uncaughtException', e => console.log('Uncaught', e));
