@@ -3,9 +3,10 @@ import { AuthUser } from "../../middleware/Auth";
 import { AppError } from "../../utils/AppError";
 import { COMMON_ERROR } from "../../constants/messages";
 import { DoctorSchema } from "./doctor.schema";
-import { CreateDoctor, GetDoctorByHostpialId } from "./doctor.service";
+import { CreateDoctor, GetDoctorByHostpialId, SearchDoctorForHospital } from "./doctor.service";
 import { emitWarning } from "node:process";
 import { success } from "zod";
+import { equal } from "node:assert";
 
 const doctorRouter = express.Router();
 
@@ -78,4 +79,25 @@ doctorRouter.get("/all", async (req, res, next) => {
   }
 });
 
+
+//Search doctor 
+doctorRouter.get('/search',AuthUser,async (req , res , next)=>{
+  try{
+    const name = req.query.name as string
+    const user = req.user! 
+    
+    const id = user.id
+    if(user.role!="Hospital"){
+      throw new AppError(COMMON_ERROR.INVALID_ROLE, 403)
+    }
+    const result = await SearchDoctorForHospital({name, id})
+    res.status(200).json({
+      success: true,
+      data: result
+    })
+  }catch(error){
+    next(error)
+  }
+
+})
 export default doctorRouter;
