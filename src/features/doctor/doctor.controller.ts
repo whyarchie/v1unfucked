@@ -3,7 +3,9 @@ import { AuthUser } from "../../middleware/Auth";
 import { AppError } from "../../utils/AppError";
 import { COMMON_ERROR } from "../../constants/messages";
 import { DoctorSchema } from "./doctor.schema";
-import { CreateDoctor } from "./doctor.service";
+import { CreateDoctor, GetDoctorByHostpialId } from "./doctor.service";
+import { emitWarning } from "node:process";
+import { success } from "zod";
 
 const doctorRouter = express.Router();
 
@@ -50,10 +52,25 @@ doctorRouter.post("/create", AuthUser, async (req, res, next) => {
     }
     const data = req.body;
 
-    const safeData = DoctorSchema.parse({ hospitalId: user.id, ...data })
-    const result = await CreateDoctor(safeData)
+    const safeData = DoctorSchema.parse({ hospitalId: user.id, ...data });
+    const result = await CreateDoctor(safeData);
     res.status(201).json({
       success: true,
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+//get all doctor by id
+doctorRouter.get("/all", async (req, res, next) => {
+  try {
+    const id = req.query.id as string;
+    const safeId = Number(id);
+    const result = await GetDoctorByHostpialId(safeId)
+    res.status(200).json({
+      success: true, 
       data: result
     })
   } catch (error) {
