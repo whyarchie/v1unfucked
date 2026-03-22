@@ -3,7 +3,7 @@ import { AuthUser } from "../../middleware/Auth";
 import { AppError } from "../../utils/AppError";
 import { COMMON_ERROR } from "../../constants/messages";
 import { DoctorSchema } from "./doctor.schema";
-import { CreateDoctor, GetDoctorByHostpialId, SearchDoctorForHospital } from "./doctor.service";
+import { CreateDoctor, GetDoctorByHostpialId, getDoctorInformation, SearchDoctorForHospital } from "./doctor.service";
 import { emitWarning } from "node:process";
 import { success } from "zod";
 import { equal } from "node:assert";
@@ -99,5 +99,21 @@ doctorRouter.get('/search',AuthUser,async (req , res , next)=>{
     next(error)
   }
 
+})
+doctorRouter.get('/', AuthUser , async (req , res ,next)=>{
+  try {
+    const user = req.user
+    const id = Number(req.query.id as string)
+    if(user?.role!='Hospital'){
+      throw new AppError(COMMON_ERROR.INVALID_ROLE, 403)
+    }
+    const result = await getDoctorInformation(id)
+    res.status(200).json({
+      success: true,
+      data: result
+    }) 
+  } catch (error) {
+    next(error)
+  }
 })
 export default doctorRouter;

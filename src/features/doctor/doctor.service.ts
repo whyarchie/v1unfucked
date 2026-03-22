@@ -1,4 +1,6 @@
 import prisma from "../../config/prisma";
+import { COMMON_ERROR } from "../../constants/messages";
+import { AppError } from "../../utils/AppError";
 import type { DoctorSchemaCreate } from "./doctor.schema";
 
 export async function CreateDoctor(data: DoctorSchemaCreate) {
@@ -49,4 +51,31 @@ export async function SearchDoctorForHospital({
     },
   });
   return result;
+}
+
+export async function getDoctorInformation({id,hospitalId}:{id:number, hospitalId: number}){
+  const doctor = await prisma.doctor.findUnique({
+    where:{
+      id,
+      hospitalId
+    },
+    select:{
+      id:true,
+      name: true,
+      patientConditions:{
+        select:{
+          patient: {
+            select:{
+              id: true,
+              name: true
+            }
+          }
+        }
+      }
+    }
+  })
+  if(!doctor){
+    throw new AppError(COMMON_ERROR.INVALID_DOCTOR , 404)
+  }
+  return doctor
 }
