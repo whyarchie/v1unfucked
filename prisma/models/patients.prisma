@@ -1,14 +1,14 @@
 model Patient {
-  id               Int                 @id @default(autoincrement())
-  name             String
-  dateOfBirth      DateTime
-  bloodGroup       String
-  gender           Gender
-  mobileNumber     String              @unique
-  medicalHistory   MedicalHistory[]
-  conditions       PatientCondition[]
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id             Int                @id @default(autoincrement())
+  name           String
+  dateOfBirth    DateTime
+  bloodGroup     String
+  gender         Gender
+  mobileNumber   String             @unique
+  medicalHistory MedicalHistory[]
+  conditions     PatientCondition[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
 }
 
 enum Gender {
@@ -16,6 +16,7 @@ enum Gender {
   FEMALE
   OTHER
 }
+
 model MedicalHistory {
   id          Int       @id @default(autoincrement())
   diseaseId   Int
@@ -24,27 +25,27 @@ model MedicalHistory {
   startDate   DateTime
   endDate     DateTime?
   patientId   Int
-  patient     Patient   @relation(fields: [patientId], references: [id] ,onDelete: Cascade)
+  patient     Patient   @relation(fields: [patientId], references: [id], onDelete: Cascade)
   createdAt   DateTime  @default(now())
 }
 
 model PatientCondition {
-  id              Int                     @id @default(autoincrement())
+  id              Int                    @id @default(autoincrement())
   patientId       Int
-  patient         Patient                 @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient         Patient                @relation(fields: [patientId], references: [id], onDelete: Cascade)
   diseaseId       Int
-  disease         Disease @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
+  disease         Disease                @relation(fields: [diseaseId], references: [id], onDelete: Cascade)
   status          PatientConditionStatus
   startDate       DateTime
   endDate         DateTime?
   hospitalId      Int
-  hospital         Hospital @relation(fields: [hospitalId], references: [id])
+  hospital        Hospital               @relation(fields: [hospitalId], references: [id])
   doctorId        Int?
-  doctor          Doctor?   @relation(fields: [doctorId], references: [id])
+  doctor          Doctor?                @relation(fields: [doctorId], references: [id])
   medicineAlloted MedicineAllotted[]
   patientProgress PatientProgress[]
-  createdAt       DateTime                @default(now())
-  updatedAt       DateTime                @updatedAt
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
 }
 
 enum PatientConditionStatus {
@@ -52,7 +53,6 @@ enum PatientConditionStatus {
   CRITICAL
   RECOVERED
 }
-
 
 model MedicineAllotted {
   id                 Int               @id @default(autoincrement())
@@ -64,22 +64,24 @@ model MedicineAllotted {
   tillDate           DateTime
   timings            MedicineTimings[]
 }
+
 model MedicineTimings {
-  id                 Int               @id @default(autoincrement())
+  id                 Int              @id @default(autoincrement())
   medicineAllottedId Int
-  medicineAllotted   MedicineAllotted  @relation(fields: [medicineAllottedId], references: [id], onDelete: Cascade)
-  timing             DateTime          @db.Time()
+  medicineAllotted   MedicineAllotted @relation(fields: [medicineAllottedId], references: [id], onDelete: Cascade)
+  timing             DateTime         @db.Time()
 }
 
 model PatientProgress {
-  id                 Int                 @id @default(autoincrement())
+  id                 Int                @id @default(autoincrement())
   patientConditionId Int
-  patientCondition   PatientCondition    @relation(fields: [patientConditionId], references: [id], onDelete: Cascade)
+  patientCondition   PatientCondition   @relation(fields: [patientConditionId], references: [id], onDelete: Cascade)
   description        String?
   jsonField          Json?
   followUpStatus     FollowUpStatus
+  progressQuestion   ProgressQuestion[]
   percentageRecovery Int?
-  createdAt          DateTime            @default(now())
+  createdAt          DateTime           @default(now())
 }
 
 enum FollowUpStatus {
@@ -87,4 +89,47 @@ enum FollowUpStatus {
   SCHEDULED
   NOT_ANSWERING
   FAILED
+}
+
+model ProgressQuestion {
+  id                Int                        @id @default(autoincrement())
+  title             String?
+  type              QuestionType
+  patientProgressId Int
+  patientProgress   PatientProgress            @relation(fields: [patientProgressId], references: [id])
+  option            Option[]
+  responses         ProgressQuestionResponse[]
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+}
+
+model Option {
+  id              Int              @id @default(autoincrement())
+  title           String
+  questionId      Int
+  question        ProgressQuestion @relation(fields: [questionId], references: [id])
+  selectedOptions SelectedOption[]
+}
+
+model ProgressQuestionResponse {
+  id              Int              @id @default(autoincrement())
+  questionId      Int
+  question        ProgressQuestion @relation(fields: [questionId], references: [id])
+  text            String?
+  selectedOptions SelectedOption[]
+  submitAT        DateTime         @default(now())
+}
+
+model SelectedOption {
+  id         Int                      @id @default(autoincrement())
+  responseId Int
+  response   ProgressQuestionResponse @relation(fields: [responseId], references: [id])
+  optionId   Int
+  option     Option                   @relation(fields: [optionId], references: [id])
+}
+
+enum QuestionType {
+  TEXT
+  SINGLESELECT
+  MULTIPLESELECT
 }
