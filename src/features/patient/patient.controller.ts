@@ -123,6 +123,49 @@ patientRouter.post("/login", async (req, res, next) => {
   }
 });
 
+
+/**
+ * @swagger
+ * /api/v1/patient/loginmedicine:
+ *   post:
+ *     summary: Login a patient
+ *     tags: [Patients]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               mobileNumber:
+ *                 type: string
+ *               dateOfBirth:
+ *                 type: string
+ *                 format: date-time
+ *             example:
+ *               mobileNumber: "919876543210"
+ *               dateOfBirth: "1990-01-01T00:00:00.000Z"
+ *     responses:
+ *       200:
+ *         description: Login successful, return array of assigned medicine 
+ *       400:
+ *         description: Invalid credentials
+ */
+patientRouter.post('/loginmedicine', async (req , res , next)=>{
+ try {
+  const data: PatientLoginInput = req.body;
+  const safeData = patientLoginSchema.parse(data);
+    const result = await LoginPatient(safeData);
+     const medicine = await GetAssignedMedicineForPatient(result.patient.id)
+    res.status(200).json({
+      success: true,
+      data: medicine
+    })
+ } catch (error) {
+  next(error)
+ }
+})
+
 /**
  * @swagger
  * /api/v1/patient/delete:
@@ -374,6 +417,36 @@ patientRouter.post("/condition/medicine", AuthUser, async (req, res, next) => {
     next(error)
   }
 })
+/**
+ * @swagger
+ * /api/v1/patient/condition/assignedmedicine:
+ *   get:
+ *     summary: Get assigned medicines for a patient
+ *     tags: [Patients]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved assigned medicines
+ *         content:
+ *           application/json:
+ *             example:
+ *               success: true
+ *               data:
+ *                 - id: 1
+ *                   patientConditionId: 1
+ *                   medicineId: 1
+ *                   quantity: 2
+ *                   tillDate: "2023-12-31T00:00:00.000Z"
+ *                   timings: ["08:00", "20:00"]
+ *                   medicine:
+ *                     id: 1
+ *                     name: "Paracetamol"
+ *                     description: "For fever"
+ *       403:
+ *         description: Invalid role
+ */
+
 patientRouter.get('/condition/assignedmedicine', AuthUser, async (req, res, next) => {
   try {
 
