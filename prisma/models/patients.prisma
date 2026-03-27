@@ -78,8 +78,9 @@ model PatientProgress {
   patientCondition   PatientCondition   @relation(fields: [patientConditionId], references: [id], onDelete: Cascade)
   description        String?
   jsonField          Json?
-  followUpStatus     FollowUpStatus
-  progressQuestion   ProgressQuestion[]
+  followUpStatus     FollowUpStatus @default(SCHEDULED)
+  questions         String?
+  scheduledDate     DateTime
   percentageRecovery Int?
   createdAt          DateTime           @default(now())
 }
@@ -89,47 +90,6 @@ enum FollowUpStatus {
   SCHEDULED
   NOT_ANSWERING
   FAILED
+  SUSPEND
 }
 
-model ProgressQuestion {
-  id                Int                        @id @default(autoincrement())
-  title             String?
-  type              QuestionType
-  patientProgressId Int
-  patientProgress   PatientProgress            @relation(fields: [patientProgressId], references: [id])
-  option            Option[]
-  responses         ProgressQuestionResponse[]
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
-}
-
-model Option {
-  id              Int              @id @default(autoincrement())
-  title           String
-  questionId      Int
-  question        ProgressQuestion @relation(fields: [questionId], references: [id])
-  selectedOptions SelectedOption[]
-}
-
-model ProgressQuestionResponse {
-  id              Int              @id @default(autoincrement())
-  questionId      Int
-  question        ProgressQuestion @relation(fields: [questionId], references: [id])
-  text            String?
-  selectedOptions SelectedOption[]
-  submitAT        DateTime         @default(now())
-}
-
-model SelectedOption {
-  id         Int                      @id @default(autoincrement())
-  responseId Int
-  response   ProgressQuestionResponse @relation(fields: [responseId], references: [id])
-  optionId   Int
-  option     Option                   @relation(fields: [optionId], references: [id])
-}
-
-enum QuestionType {
-  TEXT
-  SINGLESELECT
-  MULTIPLESELECT
-}
