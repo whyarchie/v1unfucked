@@ -243,3 +243,31 @@ export async function GetAssignedMedicineForPatient(id:number){
 
   return result
 }
+
+export async function CreatePatientProgress(data: {
+  patientConditionId: number,
+  frequency: number, // gap in days
+  totalOccurrences: number,
+  questions: string,
+  startDate: string
+}) {
+  const safeData = []
+  const baseDate = new Date(data.startDate)
+
+  for (let i = 0; i < data.totalOccurrences; i++) {
+    const date = new Date(baseDate)
+    date.setDate(baseDate.getDate() + i * data.frequency)
+
+    safeData.push({
+      patientConditionId: data.patientConditionId,
+      scheduledDate: date,
+      questions: data.questions,
+    })
+  }
+
+  const result = await prisma.patientProgress.createMany({
+    data: safeData,
+    skipDuplicates: true, // optional but safer in scheduling systems
+  })
+  return result
+}

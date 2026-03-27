@@ -1,10 +1,12 @@
 import express, { type NextFunction } from "express";
 import {
   AssignMedicineSchema,
+  CreateprogressSchema,
   medicalHistorySchema,
   PatientConditionSchema,
   patientLoginSchema,
   patientSchema,
+  type CreateprogressInput,
   type MedicalHistoryCreate,
   type PatientInput,
   type PatientLoginInput,
@@ -12,6 +14,7 @@ import {
 import {
   AssignMedicine,
   CreatePatient,
+  CreatePatientProgress,
   DeletePatientService,
   GetAssignedMedicineForPatient,
   LoginPatient,
@@ -464,4 +467,27 @@ patientRouter.get('/condition/assignedmedicine', AuthUser, async (req, res, next
   }
 
 })
+
+//patient Progress maker 
+patientRouter.post('/condition/createprogress', AuthUser, async (req , res , next )=>{
+  try {
+    const user = req.user
+    const data: CreateprogressInput = req.body
+    const safeData = CreateprogressSchema.parse(data)
+    if(user?.role!=='Hospital'){
+      throw new AppError(COMMON_ERROR.INVALID_ROLE,403)
+    }
+    const result = await CreatePatientProgress(safeData)
+    res.status(201).json({
+      success: true,
+      data: result
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+
 export default patientRouter;
+
+
