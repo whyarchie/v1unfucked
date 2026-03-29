@@ -17,6 +17,7 @@ import {
   CreatePatientProgress,
   DeletePatientService,
   GetAssignedMedicineForPatient,
+  GetPatientForHostpital,
   LoginPatient,
   MedicalHistoryCreateService,
   PatientConditionCreate,
@@ -473,11 +474,15 @@ patientRouter.post('/condition/createprogress', AuthUser, async (req , res , nex
   try {
     const user = req.user
     const data: CreateprogressInput = req.body
-    const safeData = CreateprogressSchema.parse(data)
+    let safeData = CreateprogressSchema.parse(data)
     if(user?.role!=='Hospital'){
       throw new AppError(COMMON_ERROR.INVALID_ROLE,403)
     }
-    const result = await CreatePatientProgress(safeData)
+    const actualData = {
+      ...safeData,
+      hospitalId: user.id
+    }
+    const result = await CreatePatientProgress(actualData)
     res.status(201).json({
       success: true,
       data: result
@@ -486,6 +491,26 @@ patientRouter.post('/condition/createprogress', AuthUser, async (req , res , nex
     next(error)
   }
 })
+
+//get patient progress for hospital 
+patientRouter.get('/condition/progress', AuthUser , async ( req , res , next)=>{
+  try {
+    const patientConditionId = Number(req.query.id as string)
+    const user = req.user
+    if(user?.role!=='Hospital'){
+      throw new AppError(COMMON_ERROR.INVALID_ROLE)
+    }
+    const result = await GetPatientForHostpital({patientConditionId, hospitalId:user.id} )
+    res.status(200).json({
+      success: true,
+      data: result
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+
 
 
 export default patientRouter;

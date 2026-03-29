@@ -271,3 +271,16 @@ export async function CreatePatientProgress(data: {
   })
   return result
 }
+
+export async function GetPatientForHostpital(data:{patientConditionId: number, hospitalId:number}){
+  const result = await prisma.patientProgress.findMany({
+    where:{
+      patientConditionId: data.patientConditionId,
+      patientCondition: {
+        hospitalId: data.hospitalId
+      }
+    }
+  })
+  return result
+
+}
