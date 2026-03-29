@@ -47,9 +47,16 @@ const patientRouter = express.Router();
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - name
+ *               - dateOfBirth
+ *               - bloodGroup
+ *               - gender
+ *               - mobileNumber
  *             properties:
  *               name:
  *                 type: string
+ *                 minLength: 1
  *               dateOfBirth:
  *                 type: string
  *                 format: date-time
@@ -61,6 +68,7 @@ const patientRouter = express.Router();
  *                 enum: ["MALE", "FEMALE", "OTHER"]
  *               mobileNumber:
  *                 type: string
+ *                 pattern: "^(?:\\+91|91)?[6-9]\\d{9}$"
  *             example:
  *               name: "John Doe"
  *               dateOfBirth: "1990-01-01T00:00:00.000Z"
@@ -70,6 +78,29 @@ const patientRouter = express.Router();
  *     responses:
  *       200:
  *         description: Patient created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     dateOfBirth:
+ *                       type: string
+ *                       format: date-time
+ *                     bloodGroup:
+ *                       type: string
+ *                     gender:
+ *                       type: string
+ *                     mobileNumber:
+ *                       type: string
  *       400:
  *         description: Validation error
  */
@@ -98,9 +129,13 @@ patientRouter.post("/create", async (req, res, next) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - mobileNumber
+ *               - dateOfBirth
  *             properties:
  *               mobileNumber:
  *                 type: string
+ *                 pattern: "^(?:\\+91|91)?[6-9]\\d{9}$"
  *               dateOfBirth:
  *                 type: string
  *                 format: date-time
@@ -110,7 +145,23 @@ patientRouter.post("/create", async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Login successful, returns token cookie
- *       400:
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     mobileNumber:
+ *                       type: string
+ *       401:
  *         description: Invalid credentials
  */
 patientRouter.post("/login", async (req, res, next) => {
@@ -132,7 +183,7 @@ patientRouter.post("/login", async (req, res, next) => {
  * @swagger
  * /api/v1/patient/loginmedicine:
  *   post:
- *     summary: Login a patient
+ *     summary: Login and get assigned medicines
  *     tags: [Patients]
  *     requestBody:
  *       required: true
@@ -140,9 +191,13 @@ patientRouter.post("/login", async (req, res, next) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - mobileNumber
+ *               - dateOfBirth
  *             properties:
  *               mobileNumber:
  *                 type: string
+ *                 pattern: "^(?:\\+91|91)?[6-9]\\d{9}$"
  *               dateOfBirth:
  *                 type: string
  *                 format: date-time
@@ -151,23 +206,61 @@ patientRouter.post("/login", async (req, res, next) => {
  *               dateOfBirth: "1990-01-01T00:00:00.000Z"
  *     responses:
  *       200:
- *         description: Login successful, return array of assigned medicine 
- *       400:
+ *         description: Login successful, returns array of assigned medicines
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       medicineId:
+ *                         type: integer
+ *                       quantity:
+ *                         type: integer
+ *                       tillDate:
+ *                         type: string
+ *                         format: date-time
+ *                       medicine:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: integer
+ *                           brandName:
+ *                             type: string
+ *                           genericName:
+ *                             type: string
+ *                       timings:
+ *                         type: array
+ *                         items:
+ *                           type: object
+ *                           properties:
+ *                             timing:
+ *                               type: string
+ *                               format: date-time
+ *       401:
  *         description: Invalid credentials
  */
-patientRouter.post('/loginmedicine', async (req , res , next)=>{
- try {
-  const data: PatientLoginInput = req.body;
-  const safeData = patientLoginSchema.parse(data);
+patientRouter.post('/loginmedicine', async (req, res, next) => {
+  try {
+    const data: PatientLoginInput = req.body;
+    const safeData = patientLoginSchema.parse(data);
     const result = await LoginPatient(safeData);
-     const medicine = await GetAssignedMedicineForPatient(result.patient.id)
+    const medicine = await GetAssignedMedicineForPatient(result.patient.id)
     res.status(200).json({
       success: true,
       data: medicine
     })
- } catch (error) {
-  next(error)
- }
+  } catch (error) {
+    next(error)
+  }
 })
 
 /**
@@ -181,8 +274,22 @@ patientRouter.post('/loginmedicine', async (req , res , next)=>{
  *     responses:
  *       200:
  *         description: Patient deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
  *       403:
- *         description: Unauthorized
+ *         description: Unauthorized — only patients can delete themselves
  */
 //Patient Delete
 patientRouter.delete("/delete", AuthUser, async (req, res, next) => {
@@ -213,19 +320,27 @@ patientRouter.delete("/delete", AuthUser, async (req, res, next) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - diseaseId
+ *               - patientId
+ *               - startDate
  *             properties:
  *               diseaseId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               patientId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               description:
  *                 type: string
+ *                 maxLength: 1500
  *               startDate:
  *                 type: string
  *                 format: date-time
  *               endDate:
  *                 type: string
  *                 format: date-time
+ *                 description: Must be >= startDate
  *             example:
  *               diseaseId: 1
  *               patientId: 1
@@ -234,6 +349,32 @@ patientRouter.delete("/delete", AuthUser, async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Medical history created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     diseaseId:
+ *                       type: integer
+ *                     patientId:
+ *                       type: integer
+ *                     description:
+ *                       type: string
+ *                     startDate:
+ *                       type: string
+ *                       format: date-time
+ *                     endDate:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         description: Invalid patient or disease ID
  */
 //Medical History create
 patientRouter.post("/medicalhistorycreate", async (req, res, next) => {
@@ -264,15 +405,25 @@ patientRouter.post("/medicalhistorycreate", async (req, res, next) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - patientId
+ *               - diseaseId
+ *               - hospitalId
+ *               - status
+ *               - startDate
  *             properties:
  *               patientId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               diseaseId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               hospitalId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               doctorId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               status:
  *                 type: string
  *                 enum: ["STABLE", "CRITICAL", "RECOVERED"]
@@ -282,6 +433,7 @@ patientRouter.post("/medicalhistorycreate", async (req, res, next) => {
  *               endDate:
  *                 type: string
  *                 format: date-time
+ *                 description: Must be >= startDate
  *             example:
  *               patientId: 1
  *               diseaseId: 1
@@ -291,6 +443,36 @@ patientRouter.post("/medicalhistorycreate", async (req, res, next) => {
  *     responses:
  *       201:
  *         description: Patient condition created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     patientId:
+ *                       type: integer
+ *                     diseaseId:
+ *                       type: integer
+ *                     hospitalId:
+ *                       type: integer
+ *                     doctorId:
+ *                       type: integer
+ *                     status:
+ *                       type: string
+ *                     startDate:
+ *                       type: string
+ *                       format: date-time
+ *                     endDate:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         description: Invalid patient, disease, hospital, or doctor ID
  */
 //Create Patient Condition
 patientRouter.post("/condition", AuthUser, async (req, res, next) => {
@@ -329,11 +511,39 @@ patientRouter.post("/condition", AuthUser, async (req, res, next) => {
  *         name: id
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *         description: Condition ID
+ *         example: 1
  *     responses:
  *       200:
  *         description: Patient condition details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       patientId:
+ *                         type: integer
+ *                       diseaseId:
+ *                         type: integer
+ *                       hospitalId:
+ *                         type: integer
+ *                       status:
+ *                         type: string
+ *                       startDate:
+ *                         type: string
+ *                         format: date-time
+ *       400:
+ *         description: Invalid condition ID
  */
 patientRouter.get("/condition/", AuthUser, async (req, res, next) => {
   try {
@@ -370,25 +580,41 @@ patientRouter.get("/condition/", AuthUser, async (req, res, next) => {
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - patientConditionId
+ *               - medicines
  *             properties:
  *               patientConditionId:
- *                 type: number
+ *                 type: integer
+ *                 minimum: 1
  *               medicines:
  *                 type: array
+ *                 minItems: 1
+ *                 maxItems: 20
  *                 items:
  *                   type: object
+ *                   required:
+ *                     - medicineId
+ *                     - tillDate
+ *                     - timings
  *                   properties:
  *                     medicineId:
- *                       type: number
+ *                       type: integer
+ *                       minimum: 1
  *                     quantity:
- *                       type: number
+ *                       type: integer
+ *                       minimum: 1
+ *                       default: 1
  *                     tillDate:
  *                       type: string
  *                       format: date-time
  *                     timings:
  *                       type: array
+ *                       minItems: 1
+ *                       maxItems: 10
  *                       items:
  *                         type: string
+ *                         pattern: "^([01]\\d|2[0-3]):([0-5]\\d)$"
  *             example:
  *               patientConditionId: 1
  *               medicines:
@@ -399,8 +625,39 @@ patientRouter.get("/condition/", AuthUser, async (req, res, next) => {
  *     responses:
  *       200:
  *         description: Medicine assigned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       patientConditionId:
+ *                         type: integer
+ *                       medicineId:
+ *                         type: integer
+ *                       quantity:
+ *                         type: integer
+ *                       tillDate:
+ *                         type: string
+ *                         format: date-time
+ *                       medicine:
+ *                         type: object
+ *                       timings:
+ *                         type: array
+ *                         items:
+ *                           type: object
  *       403:
- *         description: Invalid role
+ *         description: Invalid role — only hospitals can assign medicine
+ *       404:
+ *         description: Patient condition not found
  */
 patientRouter.post("/condition/medicine", AuthUser, async (req, res, next) => {
   try {
@@ -469,14 +726,79 @@ patientRouter.get('/condition/assignedmedicine', AuthUser, async (req, res, next
 
 })
 
+/**
+ * @swagger
+ * /api/v1/patient/condition/createprogress:
+ *   post:
+ *     summary: Create patient progress schedule (Hospital Only)
+ *     tags: [Patients]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientConditionId
+ *               - frequency
+ *               - totalOccurrences
+ *               - questions
+ *               - startDate
+ *             properties:
+ *               patientConditionId:
+ *                 type: integer
+ *                 description: ID of the patient condition
+ *               frequency:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Gap in days between each occurrence
+ *               totalOccurrences:
+ *                 type: integer
+ *                 minimum: 1
+ *                 description: Total number of scheduled progress entries
+ *               questions:
+ *                 type: string
+ *                 minLength: 1
+ *                 description: Questions to ask the patient
+ *               startDate:
+ *                 type: string
+ *                 format: date-time
+ *                 description: Start date for the schedule
+ *             example:
+ *               patientConditionId: 1
+ *               frequency: 7
+ *               totalOccurrences: 4
+ *               questions: "How are you feeling? Any pain? Rate severity 1-10."
+ *               startDate: "2024-01-01T00:00:00.000Z"
+ *     responses:
+ *       201:
+ *         description: Progress schedule created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     count:
+ *                       type: integer
+ *                       description: Number of progress entries created
+ *       403:
+ *         description: Invalid role — only hospitals can create progress
+ */
 //patient Progress maker 
-patientRouter.post('/condition/createprogress', AuthUser, async (req , res , next )=>{
+patientRouter.post('/condition/createprogress', AuthUser, async (req, res, next) => {
   try {
     const user = req.user
     const data: CreateprogressInput = req.body
     let safeData = CreateprogressSchema.parse(data)
-    if(user?.role!=='Hospital'){
-      throw new AppError(COMMON_ERROR.INVALID_ROLE,403)
+    if (user?.role !== 'Hospital') {
+      throw new AppError(COMMON_ERROR.INVALID_ROLE, 403)
     }
     const actualData = {
       ...safeData,
@@ -492,15 +814,61 @@ patientRouter.post('/condition/createprogress', AuthUser, async (req , res , nex
   }
 })
 
+/**
+ * @swagger
+ * /api/v1/patient/condition/progress:
+ *   get:
+ *     summary: Get patient progress entries (Hospital Only)
+ *     tags: [Patients]
+ *     security:
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Patient Condition ID
+ *         example: 1
+ *     responses:
+ *       200:
+ *         description: Patient progress entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       patientConditionId:
+ *                         type: integer
+ *                       scheduledDate:
+ *                         type: string
+ *                         format: date-time
+ *                       questions:
+ *                         type: string
+ *                       answer:
+ *                         type: string
+ *                         nullable: true
+ *       403:
+ *         description: Invalid role — only hospitals can view progress
+ */
 //get patient progress for hospital 
-patientRouter.get('/condition/progress', AuthUser , async ( req , res , next)=>{
+patientRouter.get('/condition/progress', AuthUser, async (req, res, next) => {
   try {
     const patientConditionId = Number(req.query.id as string)
     const user = req.user
-    if(user?.role!=='Hospital'){
+    if (user?.role !== 'Hospital') {
       throw new AppError(COMMON_ERROR.INVALID_ROLE)
     }
-    const result = await GetPatientForHostpital({patientConditionId, hospitalId:user.id} )
+    const result = await GetPatientForHostpital({ patientConditionId, hospitalId: user.id })
     res.status(200).json({
       success: true,
       data: result

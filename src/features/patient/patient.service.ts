@@ -245,12 +245,22 @@ export async function GetAssignedMedicineForPatient(id:number){
 }
 
 export async function CreatePatientProgress(data: {
+  hospitalId: number;
   patientConditionId: number,
   frequency: number, // gap in days
   totalOccurrences: number,
   questions: string,
   startDate: string
 }) {
+  const patientCondition = await prisma.patientCondition.findFirst({
+    where:{
+      id: data.patientConditionId,
+      hospitalId: data.hospitalId
+    }
+  })
+  if(!patientCondition){
+    throw new AppError(COMMON_ERROR.INVALID_HOSPITAL, 403)
+  }
   const safeData = []
   const baseDate = new Date(data.startDate)
 
@@ -267,6 +277,7 @@ export async function CreatePatientProgress(data: {
 
   const result = await prisma.patientProgress.createMany({
     data: safeData,
+    
     skipDuplicates: true, // optional but safer in scheduling systems
   })
   return result
