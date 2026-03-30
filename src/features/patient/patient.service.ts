@@ -295,3 +295,14 @@ export async function GetPatientForHostpital(data:{patientConditionId: number, h
   return result
 
 }
+
+export async function GetPatientProgressForPatient(id:number){
+  const result = await prisma.patientProgress.findMany({
+    where:{
+      patientCondition:{
+        patientId: id
+      }
+    }
+  })
+  return result
+}

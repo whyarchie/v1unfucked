@@ -18,6 +18,7 @@ import {
   DeletePatientService,
   GetAssignedMedicineForPatient,
   GetPatientForHostpital,
+  GetPatientProgressForPatient,
   LoginPatient,
   MedicalHistoryCreateService,
   PatientConditionCreate,
@@ -878,6 +879,73 @@ patientRouter.get('/condition/progress', AuthUser, async (req, res, next) => {
   }
 })
 
+/**
+ * @swagger
+ * /api/v1/patient/condition/patientquestions:
+ *   get:
+ *     summary: Get patient progress entries (Patient Only)
+ *     tags: [Patients]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Patient progress entries
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       patientConditionId:
+ *                         type: integer
+ *                       description:
+ *                         type: string
+ *                         nullable: true
+ *                       jsonField:
+ *                         type: object
+ *                         nullable: true
+ *                       followUpStatus:
+ *                         type: string
+ *                         enum: ["SUCCESSFUL", "SCHEDULED", "NOT_ANSWERING", "FAILED", "SUSPEND"]
+ *                       questions:
+ *                         type: string
+ *                         nullable: true
+ *                       scheduledDate:
+ *                         type: string
+ *                         format: date-time
+ *                       percentageRecovery:
+ *                         type: integer
+ *                         nullable: true
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *       403:
+ *         description: Invalid role — only patients can view their progress
+ */
+//get patient progress for Patient 
+patientRouter.get('/condition/patientquestions', AuthUser, async (req, res, next) => {
+  try {
+    const user = req.user
+    if (user?.role !== 'Patient') {
+      throw new AppError(COMMON_ERROR.INVALID_ROLE)
+    }
+    const result = await GetPatientProgressForPatient(user.id)
+    res.status(200).json({
+      success: true,
+      data: result
+    })
+  } catch (error) {
+    next(error)
+  }
+})
 
 
 
