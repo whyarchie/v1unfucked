@@ -13,6 +13,7 @@ model Patient {
 }
 model PatientDevice{
   id  Int @id @default(autoincrement())
+  fcmToken String  @unique
   patientId Int
   patient Patient @relation(fields: [patientId], references: [id])
 }

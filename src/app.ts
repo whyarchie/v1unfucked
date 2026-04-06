@@ -1,13 +1,23 @@
 import express from "express"
+import path from "path"
 import mainRouter from "./mainRouter"
 import cookieParser from "cookie-parser";
 import { globalErrorHandler } from "./middleware/globalErrorHandler"
 import { setupSwagger } from "./swagger";
+import cors from "cors";
+import "dotenv/config";
 
 const app = express()
 const PORT = Number(process.env.PORT) || 3000
+app.use(cors({
+    origin: "*",
+    credentials: true, // needed if you use cookies cross-origin
+}))
 app.use(express.json())
 app.use(cookieParser())
+
+// Serve static files (notification test page, service worker, etc.)
+app.use(express.static(path.join(__dirname, "../public")))
 
 // Setup Swagger UI
 setupSwagger(app);

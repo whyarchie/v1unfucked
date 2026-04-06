@@ -3,13 +3,18 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
+  },
   "scripts": {
-    "dev": "bun --watch src/app.ts"
+    "dev": "bun --watch src/app.ts",
+    "db:seed": "bun prisma/seed.ts"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
     "@types/bun": "latest",
     "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.3.0",

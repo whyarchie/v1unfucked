@@ -306,3 +306,12 @@ export async function GetPatientProgressForPatient(id:number){
   })
   return result
 }
+
+export async function SavePatientFcmToken({patientId,fcmToken}:{patientId:number,fcmToken:string}){
+  const data = await prisma.patientDevice.upsert({
+  where: { fcmToken },
+  update: { patientId },
+  create: { patientId, fcmToken }
+})
+  return data
+}

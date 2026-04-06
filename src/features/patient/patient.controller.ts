@@ -23,6 +23,7 @@ import {
   MedicalHistoryCreateService,
   PatientConditionCreate,
   PatientConditionGet,
+  SavePatientFcmToken,
 } from "./patient.service";
 import { AuthUser } from "../../middleware/Auth";
 import { AppError } from "../../utils/AppError";
@@ -109,6 +110,7 @@ patientRouter.post("/create", async (req, res, next) => {
   const data: PatientInput = req.body;
   try {
     const safeData = patientSchema.parse(data);
+
     const patient = await CreatePatient(safeData);
     res.status(200).json({
       success: true,
@@ -169,6 +171,7 @@ patientRouter.post("/login", async (req, res, next) => {
   const data: PatientLoginInput = req.body;
   try {
     const safeData = patientLoginSchema.parse(data);
+
     const patient = await LoginPatient(safeData);
     res.status(200).cookie("token", patient.token).json({
       success: true,
@@ -253,6 +256,7 @@ patientRouter.post('/loginmedicine', async (req, res, next) => {
   try {
     const data: PatientLoginInput = req.body;
     const safeData = patientLoginSchema.parse(data);
+
     const result = await LoginPatient(safeData);
     const medicine = await GetAssignedMedicineForPatient(result.patient.id)
     res.status(200).json({
@@ -942,6 +946,69 @@ patientRouter.get('/condition/patientquestions', AuthUser, async (req, res, next
       success: true,
       data: result
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+/**
+ * @swagger
+ * /api/v1/patient/fcm:
+ *   post:
+ *     summary: Save patient FCM (push notification) token
+ *     tags: [Patients]
+ *     security:
+ *       - cookieAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - fcm
+ *             properties:
+ *               fcm:
+ *                 type: string
+ *                 description: Firebase Cloud Messaging token
+ *             example:
+ *               fcm: "dGhpcyBpcyBhIHNhbXBsZSBGQ00gdG9rZW4..."
+ *     responses:
+ *       201:
+ *         description: FCM token saved/updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     patientId:
+ *                       type: integer
+ *                     fcmToken:
+ *                       type: string
+ *       403:
+ *         description: Invalid role
+ */
+//post fcm token  
+patientRouter.post('/fcm', AuthUser, async (req, res, next) => {
+  try {
+    const data = req.body
+    const user = req.user!
+    if (user?.role == 'Patient') {
+      throw new AppError(COMMON_ERROR.INVALID_ROLE)
+    }
+    const device = await SavePatientFcmToken({ patientId: user.id, fcmToken: data.fcm })
+    res.status(201).json({
+      success: true,
+      data: device
+    })
+
   } catch (error) {
     next(error)
   }
