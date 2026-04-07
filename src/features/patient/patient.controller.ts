@@ -299,7 +299,7 @@ patientRouter.post('/loginmedicine', async (req, res, next) => {
 
     const result = await LoginPatient(safeData);
     const medicine = await GetAssignedMedicineForPatient(result.patient.id)
-    res.status(200).json({
+    res.status(200).cookie("token", result.token).json({
       success: true,
       data: medicine
     })
