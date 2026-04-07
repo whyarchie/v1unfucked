@@ -10,12 +10,12 @@ const options: swaggerJsdoc.Options = {
             version: '1.0.0',
             description: 'API documentation for the Alivepost backend services',
         },
-        servers: [
-            {
-                url: 'http://localhost:3000',
-                description: 'Development server',
-            },
-        ],
+     servers: [
+    {
+        url: process.env.PUBLIC_URL || 'http://localhost:3000',
+        description: process.env.PUBLIC_URL ? 'Production server' : 'Development server',
+    },
+],
         components: {
             securitySchemes: {
                 cookieAuth: {

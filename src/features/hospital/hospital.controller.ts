@@ -102,10 +102,11 @@ hospitalRouter.post('/login', async (req, res, next) => {
     const data = req.body
     const safeData = HospitalLoginSchema.parse(data);
     const hospital = await HospitalLogin(safeData)
-    res.status(200).cookie("token", hospital.token).json({
-      success: true,
-      data: hospital.safeData
-    })
+   res.status(200).cookie("token", hospital.token, {
+  httpOnly: true,       // JS can't read it — more secure
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000
+}).json({ success: true, data: hospital.safeData })
   } catch (error) {
     next(error)
   }

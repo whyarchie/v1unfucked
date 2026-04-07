@@ -1,11 +1,24 @@
 import { z } from "zod";
 import { COMMON_ERROR, PATIENT_ERRORS } from "../../constants/messages";
 
+const normalizeMobile = (mobile: string): string => {
+  const digits = mobile.trim().replace(/\D/g, "");
+  if (digits.startsWith("91") && digits.length === 12) {
+    return digits.slice(2);
+  }
+  return digits;
+};
 export const patientSchema = z.object({
-  name: z.string().min(1, { message: PATIENT_ERRORS.NAME_REQUIRED }),
+  name: z
+    .string()
+    .trim()                                    // 👈 "  John  " → "John"
+    .min(1, { message: PATIENT_ERRORS.NAME_REQUIRED }),
 
   dateOfBirth: z.coerce
     .date({ message: PATIENT_ERRORS.DOB_INVALID })
+    .refine((date) => !isNaN(date.getTime()), {  // 👈 catches "banana" → Invalid Date
+      message: PATIENT_ERRORS.DOB_INVALID,
+    })
     .refine((date) => date < new Date(), {
       message: PATIENT_ERRORS.DOB_FUTURE,
     }),
@@ -23,8 +36,10 @@ export const patientSchema = z.object({
     .trim()
     .regex(/^(?:\+91|91)?[6-9]\d{9}$/, {
       message: PATIENT_ERRORS.MOBILE_INVALID,
-    }),
+    })
+    .transform(normalizeMobile),               // 👈 same fix, consistent with login
 });
+
 
 export const patientLoginSchema = z.object({
   mobileNumber: z
@@ -32,7 +47,9 @@ export const patientLoginSchema = z.object({
     .trim()
     .regex(/^(?:\+91|91)?[6-9]\d{9}$/, {
       message: PATIENT_ERRORS.MOBILE_INVALID,
-    }),
+    })
+    .transform(normalizeMobile),  // 👈 normalize after validation passes
+
   dateOfBirth: z.coerce
     .date({ message: PATIENT_ERRORS.DOB_INVALID })
     .refine((date) => date < new Date(), {

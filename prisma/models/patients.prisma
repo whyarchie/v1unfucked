@@ -7,10 +7,16 @@ model Patient {
   mobileNumber   String             @unique
   medicalHistory MedicalHistory[]
   conditions     PatientCondition[]
+  patientDevices PatientDevice[]
   createdAt      DateTime           @default(now())
   updatedAt      DateTime           @updatedAt
 }
-
+model PatientDevice{
+  id  Int @id @default(autoincrement())
+  fcmToken String  @unique
+  patientId Int
+  patient Patient @relation(fields: [patientId], references: [id])
+}
 enum Gender {
   MALE
   FEMALE
@@ -80,6 +86,7 @@ model PatientProgress {
   jsonField          Json?
   followUpStatus     FollowUpStatus @default(SCHEDULED)
   questions         String?
+  answer  String?
   scheduledDate     DateTime
   percentageRecovery Int?
   createdAt          DateTime           @default(now())

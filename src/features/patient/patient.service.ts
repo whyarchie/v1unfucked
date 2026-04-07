@@ -25,6 +25,43 @@ export async function CreatePatient(data: PatientInput) {
   return patient;
 }
 
+export async function SearchPatientByMobile(mobileNumber: string, hospitalId: number) {
+  // Normalize: strip +91 or 91 prefix
+  const digits = mobileNumber.trim().replace(/\D/g, "");
+  const normalized = digits.startsWith("91") && digits.length === 12 ? digits.slice(2) : digits;
+
+  const patient = await prisma.patient.findUnique({
+    where: { mobileNumber: normalized },
+    include: {
+      medicalHistory: {
+        include: { disease: true },
+        orderBy: { startDate: "desc" },
+      },
+      conditions: {
+        where: { hospitalId },
+        include: {
+          disease: true,
+          hospital: true,
+          doctor: true,
+          medicineAlloted: {
+            include: {
+              medicine: true,
+              timings: true,
+            },
+          },
+          patientProgress: true,
+        },
+        orderBy: { startDate: "desc" },
+      },
+    },
+  });
+  if (!patient) {
+    throw new AppError("Patient not found with this mobile number", 404);
+  }
+
+  return patient;
+}
+
 //Login patient using mobile number and dateofBirth
 export async function LoginPatient(data: PatientLoginInput) {
   const patient = await prisma.patient.findUnique({
@@ -37,7 +74,7 @@ export async function LoginPatient(data: PatientLoginInput) {
     throw new AppError(error.INVALID_CREDENTIALS, 401);
   }
   const user = {
-    id:patient.id,
+    id: patient.id,
     role: "Patient"
   }
   const token = jwtTokenSigner(user)
@@ -171,7 +208,7 @@ export async function PatientConditionGet({
 
   return condition;
 }
-export async function AssignMedicine(data: AssignMedicineInput, user: {id:number, role:string}) {
+export async function AssignMedicine(data: AssignMedicineInput, user: { id: number, role: string }) {
 
   const condition = await prisma.patientCondition.findUnique({
     where: {
@@ -190,7 +227,7 @@ export async function AssignMedicine(data: AssignMedicineInput, user: {id:number
   const result = await prisma.$transaction(async (tx) => {
 
     const created = []
-    
+
     for (const med of data.medicines) {
 
       const medicine = await tx.medicineAllotted.create({
@@ -222,20 +259,20 @@ export async function AssignMedicine(data: AssignMedicineInput, user: {id:number
   return result
 }
 
-export async function GetAssignedMedicineForPatient(id:number){
+export async function GetAssignedMedicineForPatient(id: number) {
 
   const result = await prisma.medicineAllotted.findMany({
-    where:{
-      patientCondition:{
-        patientId:id
+    where: {
+      patientCondition: {
+        patientId: id
       }
     },
-    include:{
-      medicine:true,
-      timings:true,
-      patientCondition:{
-        include:{
-          disease:true
+    include: {
+      medicine: true,
+      timings: true,
+      patientCondition: {
+        include: {
+          disease: true
         }
       }
     }
@@ -253,12 +290,12 @@ export async function CreatePatientProgress(data: {
   startDate: string
 }) {
   const patientCondition = await prisma.patientCondition.findFirst({
-    where:{
+    where: {
       id: data.patientConditionId,
       hospitalId: data.hospitalId
     }
   })
-  if(!patientCondition){
+  if (!patientCondition) {
     throw new AppError(COMMON_ERROR.INVALID_HOSPITAL, 403)
   }
   const safeData = []
@@ -277,15 +314,15 @@ export async function CreatePatientProgress(data: {
 
   const result = await prisma.patientProgress.createMany({
     data: safeData,
-    
+
     skipDuplicates: true, // optional but safer in scheduling systems
   })
   return result
 }
 
-export async function GetPatientForHostpital(data:{patientConditionId: number, hospitalId:number}){
+export async function GetPatientForHostpital(data: { patientConditionId: number, hospitalId: number }) {
   const result = await prisma.patientProgress.findMany({
-    where:{
+    where: {
       patientConditionId: data.patientConditionId,
       patientCondition: {
         hospitalId: data.hospitalId
@@ -296,13 +333,22 @@ export async function GetPatientForHostpital(data:{patientConditionId: number, h
 
 }
 
-export async function GetPatientProgressForPatient(id:number){
+export async function GetPatientProgressForPatient(id: number) {
   const result = await prisma.patientProgress.findMany({
-    where:{
-      patientCondition:{
+    where: {
+      patientCondition: {
         patientId: id
       }
     }
   })
   return result
+}
+
+export async function SavePatientFcmToken({ patientId, fcmToken }: { patientId: number, fcmToken: string }) {
+  const data = await prisma.patientDevice.upsert({
+    where: { fcmToken },
+    update: { patientId },
+    create: { patientId, fcmToken }
+  })
+  return data
 }
