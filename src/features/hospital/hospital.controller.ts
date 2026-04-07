@@ -38,11 +38,11 @@ const hospitalRouter = express.Router();
  *               password:
  *                 type: string
  *             example:
- *               name: "City General Hospital"
- *               helplineNumber: "1800123456"
- *               address: "123 Health Ave, Metropolis"
- *               userId: "citygen_01"
- *               password: "SecurePassword1"
+ *               name: "Apollo Hospital Delhi"
+ *               helplineNumber: "011-26825000"
+ *               address: "Sarita Vihar, Delhi Mathura Road, New Delhi - 110076"
+ *               userId: "apollo_delhi"
+ *               password: "Hospital@123"
  *     responses:
  *       201:
  *         description: Hospital created successfully
@@ -90,8 +90,8 @@ hospitalRouter.post("/create", async (req, res, next) => {
  *               password:
  *                 type: string
  *             example:
- *               userId: "citygen_01"
- *               password: "SecurePassword1"
+ *               userId: "apollo_delhi"
+ *               password: "Hospital@123"
  *     responses:
  *       200:
  *         description: Login successful, returns token cookie
@@ -102,11 +102,11 @@ hospitalRouter.post('/login', async (req, res, next) => {
     const data = req.body
     const safeData = HospitalLoginSchema.parse(data);
     const hospital = await HospitalLogin(safeData)
-   res.status(200).cookie("token", hospital.token, {
-  httpOnly: true,       // JS can't read it — more secure
-  sameSite: "lax",
-  maxAge: 7 * 24 * 60 * 60 * 1000
-}).json({ success: true, data: hospital.safeData })
+    res.status(200).cookie("token", hospital.token, {
+      httpOnly: true,       // JS can't read it — more secure
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    }).json({ success: true, data: hospital.safeData })
   } catch (error) {
     next(error)
   }

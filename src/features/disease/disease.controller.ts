@@ -34,7 +34,7 @@ const diseaseRouter = express.Router();
  *             example:
  *               name: "Hypertension"
  *               type: "CHRONIC"
- *               description: "High blood pressure condition"
+ *               description: "Persistently elevated arterial blood pressure"
  *     responses:
  *       201:
  *         description: Disease created successfully

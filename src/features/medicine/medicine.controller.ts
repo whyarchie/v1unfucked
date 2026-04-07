@@ -35,11 +35,11 @@ const medicineRouter = express.Router();
  *               manufacturer:
  *                 type: string
  *             example:
- *               brandName: "Paracetamol"
- *               genericName: "Acetaminophen"
+ *               brandName: "Crocin"
+ *               genericName: "Paracetamol"
  *               dosageForm: "TABLET"
  *               dosageStrength: "500mg"
- *               manufacturer: "PharmaCorp"
+ *               manufacturer: "GSK"
  *     responses:
  *       200:
  *         description: Medicine created successfully

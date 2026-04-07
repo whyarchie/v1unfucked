@@ -37,8 +37,8 @@ const doctorRouter = express.Router();
  *               username:
  *                 type: string
  *             example:
- *               name: "Dr. Gregory House"
- *               username: "drhouse_01"
+ *               name: "Dr. Rajesh Sharma"
+ *               username: "dr.sharma"
  *     responses:
  *       201:
  *         description: Doctor created successfully
@@ -71,7 +71,7 @@ doctorRouter.get("/all", async (req, res, next) => {
     const safeId = Number(id);
     const result = await GetDoctorByHostpialId(safeId)
     res.status(200).json({
-      success: true, 
+      success: true,
       data: result
     })
   } catch (error) {
@@ -81,37 +81,37 @@ doctorRouter.get("/all", async (req, res, next) => {
 
 
 //Search doctor 
-doctorRouter.get('/search',AuthUser,async (req , res , next)=>{
-  try{
+doctorRouter.get('/search', AuthUser, async (req, res, next) => {
+  try {
     const name = req.query.name as string
-    const user = req.user! 
-    
+    const user = req.user!
+
     const id = user.id
-    if(user.role!="Hospital"){
+    if (user.role != "Hospital") {
       throw new AppError(COMMON_ERROR.INVALID_ROLE, 403)
     }
-    const result = await SearchDoctorForHospital({name, id})
+    const result = await SearchDoctorForHospital({ name, id })
     res.status(200).json({
       success: true,
       data: result
     })
-  }catch(error){
+  } catch (error) {
     next(error)
   }
 
 })
-doctorRouter.get('/', AuthUser , async (req , res ,next)=>{
+doctorRouter.get('/', AuthUser, async (req, res, next) => {
   try {
     const user = req.user
     const id = Number(req.query.id as string)
-    if(user?.role!='Hospital'){
+    if (user?.role != 'Hospital') {
       throw new AppError(COMMON_ERROR.INVALID_ROLE, 403)
     }
-    const result = await getDoctorInformation(id)
+    const result = await getDoctorInformation({ id, hospitalId: user.id })
     res.status(200).json({
       success: true,
       data: result
-    }) 
+    })
   } catch (error) {
     next(error)
   }

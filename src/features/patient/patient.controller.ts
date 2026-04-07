@@ -112,11 +112,11 @@ patientRouter.get("/search", AuthUser, async (req, res, next) => {
  *                 type: string
  *                 pattern: "^(?:\\+91|91)?[6-9]\\d{9}$"
  *             example:
- *               name: "John Doe"
- *               dateOfBirth: "1990-01-01T00:00:00.000Z"
- *               bloodGroup: "O+"
+ *               name: "Amit Kumar"
+ *               dateOfBirth: "1985-06-15T00:00:00.000Z"
+ *               bloodGroup: "B+"
  *               gender: "MALE"
- *               mobileNumber: "919876543210"
+ *               mobileNumber: "9876543210"
  *     responses:
  *       200:
  *         description: Patient created successfully
@@ -183,8 +183,8 @@ patientRouter.post("/create", async (req, res, next) => {
  *                 type: string
  *                 format: date-time
  *             example:
- *               mobileNumber: "919876543210"
- *               dateOfBirth: "1990-01-01T00:00:00.000Z"
+ *               mobileNumber: "9876543210"
+ *               dateOfBirth: "1985-06-15T00:00:00.000Z"
  *     responses:
  *       200:
  *         description: Login successful, returns token cookie
@@ -246,8 +246,8 @@ patientRouter.post("/login", async (req, res, next) => {
  *                 type: string
  *                 format: date-time
  *             example:
- *               mobileNumber: "919876543210"
- *               dateOfBirth: "1990-01-01T00:00:00.000Z"
+ *               mobileNumber: "9876543210"
+ *               dateOfBirth: "1985-06-15T00:00:00.000Z"
  *     responses:
  *       200:
  *         description: Login successful, returns array of assigned medicines
