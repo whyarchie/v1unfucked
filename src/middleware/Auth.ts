@@ -28,6 +28,18 @@ export function AuthUser(
 
     next();
   } catch (error) {
+      // JWT errors are EXPECTED — handle them here, don't bubble up
+    if (error instanceof jwt.TokenExpiredError) {
+      res.status(401).json({ msg: "Token expired, please login again" });
+      return;
+    }
+
+    if (error instanceof jwt.JsonWebTokenError) {
+      // covers: malformed, invalid signature, wrong algorithm, etc.
+      res.status(401).json({ msg: "Invalid token" });
+      return;
+    }
+
     next(error);
   }
 }

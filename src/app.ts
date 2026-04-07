@@ -10,7 +10,7 @@ import "dotenv/config";
 const app = express()
 const PORT = Number(process.env.PORT) || 3000
 app.use(cors({
-    origin: "*",
+    origin: "http://localhost:3001",
     credentials: true, // needed if you use cookies cross-origin
 }))
 app.use(express.json())
