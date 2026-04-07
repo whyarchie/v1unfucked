@@ -286,7 +286,7 @@ export async function CreatePatientProgress(data: {
   patientConditionId: number,
   frequency: number, // gap in days
   totalOccurrences: number,
-  questions: string,
+  questions: any,
   startDate: string
 }) {
   const patientCondition = await prisma.patientCondition.findFirst({

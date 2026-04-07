@@ -325,8 +325,8 @@ async function main() {
                 followUpStatus: 'SUCCESSFUL',
                 scheduledDate: new Date('2024-02-15'),
                 percentageRecovery: 40,
-                questions: 'Are you following the prescribed diet?',
-                answer: 'Yes, mostly following the low-sugar diet.',
+                questions: [{ text: 'Are you following the prescribed diet?', type: 'text' }],
+                answer: [{ text: 'Yes, mostly following the low-sugar diet.', type: 'text' }],
             },
             {
                 patientConditionId: conditions[0].id,
@@ -334,8 +334,8 @@ async function main() {
                 followUpStatus: 'SUCCESSFUL',
                 scheduledDate: new Date('2024-04-15'),
                 percentageRecovery: 60,
-                questions: 'Any episodes of hypoglycemia?',
-                answer: 'One mild episode last week.',
+                questions: [{ text: 'Any episodes of hypoglycemia?', type: 'text' }],
+                answer: [{ text: 'One mild episode last week.', type: 'text' }],
             },
             {
                 patientConditionId: conditions[1].id,
@@ -357,8 +357,8 @@ async function main() {
                 followUpStatus: 'SUCCESSFUL',
                 scheduledDate: new Date('2024-03-22'),
                 percentageRecovery: 35,
-                questions: 'How is your breathing now?',
-                answer: 'Much better, no chest pain.',
+                questions: [{ text: 'How is your breathing now?', type: 'text' }],
+                answer: [{ text: 'Much better, no chest pain.', type: 'text' }],
             },
             {
                 patientConditionId: conditions[3].id,

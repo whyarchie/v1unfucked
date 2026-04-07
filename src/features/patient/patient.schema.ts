@@ -164,11 +164,7 @@ export const CreateprogressSchema = z.object({
     })
     .min(1, COMMON_ERROR.INVALID_NUMBER),
 
-  questions: z
-    .string({
-      message: COMMON_ERROR.INVALID_STRING,
-    })
-    .min(1, COMMON_ERROR.EMPTY_STRING),
+  questions: z.any(),
 
   startDate: z.string({
     message: COMMON_ERROR.STARTDATE_REQUIRE

@@ -804,9 +804,10 @@ patientRouter.get('/condition/assignedmedicine', AuthUser, async (req, res, next
  *                 minimum: 1
  *                 description: Total number of scheduled progress entries
  *               questions:
- *                 type: string
- *                 minLength: 1
- *                 description: Questions to ask the patient
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                 description: JSON array containing questions to ask the patient
  *               startDate:
  *                 type: string
  *                 format: date-time
@@ -815,7 +816,7 @@ patientRouter.get('/condition/assignedmedicine', AuthUser, async (req, res, next
  *               patientConditionId: 1
  *               frequency: 7
  *               totalOccurrences: 4
- *               questions: "How are you feeling? Any pain? Rate severity 1-10."
+ *               questions: [ { "text": "How are you feeling?", "type": "text" } ]
  *               startDate: "2024-01-01T00:00:00.000Z"
  *     responses:
  *       201:
